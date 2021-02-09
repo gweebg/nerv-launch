@@ -1,13 +1,14 @@
+import argparse
 import os
 import sys
-import argparse
-import keyboard
-from colorama import init
-from termcolor import colored
-import stdiomask
-import github
-from github import Github
 
+import github
+import keyboard
+import stdiomask
+from colorama import init
+from cryptography.fernet import Fernet
+from github import Github
+from termcolor import colored
 
 """
 Suported languages: 
@@ -42,16 +43,79 @@ args = parser.parse_args()
 
 # print(args.name, args.language, args.editor, args.path)
 
+class bcolors:
+    
+    HEADER = '\033[95m'
+    OKBLUE = '\033[94m'
+    OKCYAN = '\033[96m'
+    OKGREEN = '\033[92m'
+    WARNING = '\033[33m'
+    FAIL = '\033[91m'
+    ENDC = '\033[0m'
+    BOLD = '\033[1m'
+    UNDERLINE = '\033[4m'
 
 def setup():
     # ask for github token 
-    # ask for default language
     # ask for default editor
     # save in file encripted 
     # example : token
     # check if .txt file exists then skip setup else run setup
-    pass
+    print("\nLooks like this is your first time using Nerv-Launch.")
+    print("In order to continue complete the setup. Keep in mind that this is only required one time.\n")
+    
 
+    while True:
+        
+        user = input(f"{bcolors.OKGREEN}[1]{bcolors.ENDC} User: ")
+        if not user.strip():
+            print(colored("Please enter a username.\n","yellow"))
+        
+        editor = input(f"{bcolors.OKGREEN}[2]{bcolors.ENDC} Default code editor: ")
+        if not editor.strip():
+            print(colored("Please enter a default code editor.\n","yellow"))
+        else:
+            break
+    
+    while True:
+        
+        o = input(f"{bcolors.OKGREEN}[3]{bcolors.ENDC} Do you wish to have access to Github when creating a new project ? (y/n) ")
+        if o == 'y' or o =='n':
+            break
+        else:
+            print(colored("Please select an option.\n","yellow"))
+    
+    if o == "y": 
+        
+        try:
+            
+            token = input(f"  {bcolors.WARNING}(*){bcolors.ENDC} Please provide your authentication token for your Github account : ")
+            key = Fernet.generate_key() # secret key for encription 
+            
+            f = Fernet(key)
+            encrypted = f.encrypt(b"{token}")
+            
+            # decrypted_message = f.decrypt(encrypted_message)
+
+            # print(decrypted_message.decode())
+            
+            file = open("log.txt","w")
+            file.write(f"{str(encrypted)}\n{user}\n{editor}")
+            file.close()
+            
+            print(colored("\nSetup finished.","green"))
+            
+        except Exception as e:
+            
+            print(colored(f"An error has occured:\n[{e}]","yellow"))
+            print(colored("Something went wrong.","red"))
+            sys.exit()
+                
+    else: 
+        print(colored("Aborting ...", "red"))
+        sys.exit()
+        
+            
 def check_lan(lan):
     if lan == 'python3':
         if os.system("python --version > /dev/null") != 0:
@@ -85,7 +149,6 @@ def check_lan(lan):
         print("Language not suported.\n Use [nerv -h] to check all the supported languages.")
         return False
         
-
 # Creating the new project folder
 def new_folder(path,name):
     # Changing into the given path.
@@ -130,7 +193,6 @@ def create_venv(lan):
         else: 
             os.system("python3 -m venv env")
     
-
 def git():
         
     # Asking for credentials 
@@ -165,13 +227,13 @@ def git():
     # solution might be not using Github api but shell commands using the token 
     # commit the folder where the repo is created
 
-
-if __name__ == "__main__": 
-    if check_lan(args.language):
-        print("Language available.")
-        # Creates the project folder.
-        new_folder(args.path,args.name)
-        #if args.git then git() else pass
+# if __name__ == "__main__": 
+#     if check_lan(args.language):
+#         print("Language available.")
+#         # Creates the project folder.
+#         new_folder(args.path,args.name)
+#         #if args.git then git() else pass
         
+setup()
     
 
