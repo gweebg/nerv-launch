@@ -2,13 +2,19 @@ import os
 import sys
 import argparse
 import keyboard
+from colorama import init
+from termcolor import colored
+import stdiomask
+import github
+from github import Github
+
 
 """
 Suported languages: 
     .python
     .c
     .haskell
-    .java
+    .java 
 
 Arguments : 
     -n * --name
@@ -21,6 +27,8 @@ Arguments :
 nerv -l python3 -e vscode -g gpl3
 """    
 
+init()
+
 parser = argparse.ArgumentParser()
 parser.add_argument("-n", "--name", type = str, required = True, help = "Project Name")
 parser.add_argument("-l", "--language", type = str, required = True, help = "Coding Language" )
@@ -32,32 +40,42 @@ group.add_argument("-g", "--git", action = "store_true", help = "Create Reposito
 
 args = parser.parse_args()
 
-print(args.name, args.language, args.editor, args.path)
+# print(args.name, args.language, args.editor, args.path)
+
+
+def setup():
+    # ask for github token 
+    # ask for default language
+    # ask for default editor
+    # save in file encripted 
+    # example : token
+    # check if .txt file exists then skip setup else run setup
+    pass
 
 def check_lan(lan):
     if lan == 'python3':
-        if os.system("python --version") != 0:
+        if os.system("python --version > /dev/null") != 0:
             print("Language/Compiler not installed.")
             return False
         else: 
             return True
                 
     elif lan == 'haskell':
-        if os.system("ghci --version") != 0: 
+        if os.system("ghci --version > /dev/null") != 0: 
             print("Language/Compiler not installed.")
             return False
         else: 
             return True
             
     elif lan == 'c':
-        if os.system("gcc --version") != 0:
+        if os.system("gcc --version > /dev/null") != 0:
             print("Language/Compiler not installed.")
             return False
         else: 
             return True
         
     elif lan == 'java':
-        if os.system("java -version") != 0:
+        if os.system("java -version > /dev/null") != 0:
             print("Language/Compiler not installed.")
             return False
         else: 
@@ -75,14 +93,17 @@ def new_folder(path,name):
     
     # Tries to create a folder with the args.name if FileExistsError is raised than ends the program.
     try:
+        print(colored("Creating project folder:","green"))
         os.mkdir(name)
     except FileExistsError:
         raise Exception("Duplicate name, choose another name.")
     
-    os.chdir(os.getcwd()) # Change to the new folder
-    os.mkdir("src") # Create 'src' folder 
-    os.mkdir("docs") # Create 'docs' folder
-    os.mkdir("lib") # Create 'lib' folder
+    print(" .src")
+    os.mkdir(f"{name}/src") # Create 'src' folder 
+    print(" .docs")
+    os.mkdir(f"{name}/docs") # Create 'docs' folder
+    print(" .lib")
+    os.mkdir(f"{name}/lib") # Create 'lib' folder
 
 def create_venv(lan):
     if lan == "python3": 
@@ -109,10 +130,48 @@ def create_venv(lan):
         else: 
             os.system("python3 -m venv env")
     
+
+def git():
+        
+    # Asking for credentials 
+    print("GitHub login:")
+    username = input("Username: ")
+    pwd = stdiomask.getpass()
+    
+    try:
+        # Github instance using username and password
+        hub = Github(username,pwd, retry = 3) # After 3 tries 
+        user = hub.get_user()
+
+        try:
+            user.login()
+            repo = user.create_repo(args.name)
+            print("Repo created")
+        
+        except github.GithubException as e:
+            print(e.status)
+            print(colored("Something went wrong.","red"))
+            
+    except github.GithubException.RateLimitExceededException as e:
+        print(e.status)
+        print(colored("Rate limit exceeded.","red"))
+        
+    except github.GithubException.TwoFactorException as ex: 
+        print(ex.status)
+        print(colored("Please disable two factor authentication.","red"))
+        
+    # not working yet, user auth token instead 
+    # read and decrpyt the auth token from log.txt 
+    # solution might be not using Github api but shell commands using the token 
+    # commit the folder where the repo is created
+
+
 if __name__ == "__main__": 
     if check_lan(args.language):
+        print("Language available.")
         # Creates the project folder.
         new_folder(args.path,args.name)
-        print("Project folder created.")
+        #if args.git then git() else pass
+        
     
 
