@@ -1,13 +1,13 @@
 import argparse
 import os
 import sys
+import subprocess
 
-import github
+from git import Repo
 import keyboard
 import stdiomask
 from colorama import init
 from cryptography.fernet import Fernet
-from github import Github
 from termcolor import colored
 
 """
@@ -56,39 +56,40 @@ class bcolors:
     UNDERLINE = '\033[4m'
 
 def setup():
-    # ask for github token 
-    # ask for default editor
-    # save in file encripted 
-    # example : token
-    # check if .txt file exists then skip setup else run setup
-    print("\nLooks like this is your first time using Nerv-Launch.")
-    print("In order to continue complete the setup. Keep in mind that this is only required one time.\n")
     
-
+    # Info message
+    print("\nLooks like this is your first time using Nerv-Launch.")
+    print("In order to continue, please, complete the setup. Keep in mind that this is only required one time.\n")
+    
     while True:
         
+        # Get user name for greetings
         user = input(f"{bcolors.OKGREEN}[1]{bcolors.ENDC} User: ")
-        if not user.strip():
-            print(colored("Please enter a username.\n","yellow"))
+        if not user.strip(): # Check if it is not an empty string
+            print(colored("Please enter a username.\n","yellow")) 
         
+        # Get default editor
         editor = input(f"{bcolors.OKGREEN}[2]{bcolors.ENDC} Default code editor: ")
-        if not editor.strip():
+        if not editor.strip(): # Check for empty string
             print(colored("Please enter a default code editor.\n","yellow"))
         else:
             break
     
     while True:
         
+        # Use github for project
         o = input(f"{bcolors.OKGREEN}[3]{bcolors.ENDC} Do you wish to have access to Github when creating a new project ? (y/n) ")
         if o == 'y' or o =='n':
             break
         else:
             print(colored("Please select an option.\n","yellow"))
+            
     
     if o == "y": 
         
         try:
             
+            username = input(f"  {bcolors.WARNING}(*){bcolors.ENDC} Please enter your Github username : ")
             token = input(f"  {bcolors.WARNING}(*){bcolors.ENDC} Please provide your authentication token for your Github account : ")
             key = Fernet.generate_key() # secret key for encription 
             
@@ -100,10 +101,14 @@ def setup():
             # print(decrypted_message.decode())
             
             file = open("log.txt","w")
-            file.write(f"{str(encrypted)}\n{user}\n{editor}")
+            e = encrypted.decode("utf-8")
+            file.write(f"{e}\n{user}\n{editor}\n{username}")
             file.close()
             
-            print(colored("\nSetup finished.","green"))
+            file = open("key.key","w") 
+            file.write(key.decode('utf-8'))
+            
+            print(colored("\nSetup finished.\n","green"))
             
         except Exception as e:
             
@@ -112,43 +117,48 @@ def setup():
             sys.exit()
                 
     else: 
-        print(colored("Aborting ...", "red"))
-        sys.exit()
+        with open("log.txt","w") as f:
+            f.write(f"{user}\n{editor}")
+            f.close()
+        
+        ghub = False
+        
+        print(colored("\nSetup finished.\n","green"))
         
             
 def check_lan(lan):
     if lan == 'python3':
         if os.system("python --version > /dev/null") != 0:
-            print("Language/Compiler not installed.")
+            print(colored("Language/Compiler not installed.","yellow"))
             return False
         else: 
             return True
                 
     elif lan == 'haskell':
         if os.system("ghci --version > /dev/null") != 0: 
-            print("Language/Compiler not installed.")
+            print(colored("Language/Compiler not installed.","yellow"))
             return False
         else: 
             return True
             
     elif lan == 'c':
         if os.system("gcc --version > /dev/null") != 0:
-            print("Language/Compiler not installed.")
+            print(colored("Language/Compiler not installed.","yellow"))
             return False
         else: 
             return True
         
     elif lan == 'java':
         if os.system("java -version > /dev/null") != 0:
-            print("Language/Compiler not installed.")
+            print(colored("Language/Compiler not installed.","yellow"))
             return False
         else: 
             return True
         
     else: 
-        print("Language not suported.\n Use [nerv -h] to check all the supported languages.")
+        print(colored("Language not suported.\n Use [nerv -h] to check all the supported languages.","yellow"))
         return False
-        
+
 # Creating the new project folder
 def new_folder(path,name):
     # Changing into the given path.
@@ -159,14 +169,42 @@ def new_folder(path,name):
         print(colored("Creating project folder:","green"))
         os.mkdir(name)
     except FileExistsError:
-        raise Exception("Duplicate name, choose another name.")
+        print(colored(f"The directory '{name}' already exists, please remove it or change the project name.","red"))
     
-    print(" .src")
+    print(" {bcolors.WARNING}.{bcolors.ENDC}src")
     os.mkdir(f"{name}/src") # Create 'src' folder 
-    print(" .docs")
+    print(" {bcolors.WARNING}.{bcolors.ENDC}docs")
     os.mkdir(f"{name}/docs") # Create 'docs' folder
-    print(" .lib")
+    print(" {bcolors.WARNING}.{bcolors.ENDC}lib")
     os.mkdir(f"{name}/lib") # Create 'lib' folder
+
+def git():
+    
+    with open("log.txt","r") as file:
+        info = file.read().split('\n')
+        file.close()
+     
+    with open("key.key","r") as keyf:
+        key = keyf.read()
+        keyf.close()
+    
+    f = Fernet(key)
+    t = (info[0]).encode("utf-8")
+    token = (f.decrypt(t)).decode('utf-8')
+    
+    token = token.replace('{','')
+    token = token.replace('}','')
+    
+    user = info[1]
+    editor = info[2]
+    git_user = info[-1]
+    
+    print(f"{token}\n{user}\n{editor}\n{git_user}") 
+    
+    print(f"Repository created : https://github.com/{git_user}/{args.name} ")
+    
+    
+
 
 def create_venv(lan):
     if lan == "python3": 
@@ -193,47 +231,39 @@ def create_venv(lan):
         else: 
             os.system("python3 -m venv env")
     
-def git():
-        
-    # Asking for credentials 
-    print("GitHub login:")
-    username = input("Username: ")
-    pwd = stdiomask.getpass()
-    
-    try:
-        # Github instance using username and password
-        hub = Github(username,pwd, retry = 3) # After 3 tries 
-        user = hub.get_user()
-
-        try:
-            user.login()
-            repo = user.create_repo(args.name)
-            print("Repo created")
-        
-        except github.GithubException as e:
-            print(e.status)
-            print(colored("Something went wrong.","red"))
-            
-    except github.GithubException.RateLimitExceededException as e:
-        print(e.status)
-        print(colored("Rate limit exceeded.","red"))
-        
-    except github.GithubException.TwoFactorException as ex: 
-        print(ex.status)
-        print(colored("Please disable two factor authentication.","red"))
-        
-    # not working yet, user auth token instead 
-    # read and decrpyt the auth token from log.txt 
-    # solution might be not using Github api but shell commands using the token 
-    # commit the folder where the repo is created
-
 # if __name__ == "__main__": 
 #     if check_lan(args.language):
 #         print("Language available.")
 #         # Creates the project folder.
 #         new_folder(args.path,args.name)
 #         #if args.git then git() else pass
-        
-setup()
+       
+if __name__ == "__main__":
+    if os.path.isfile("log.txt"):
+        # Meter tudo aqui sem o setup
+        git()
+        pass
+    else: 
+        setup()
+        git()
+        # Meter tudo o resto 
+
     
 
+# g = Github(token)
+#     print("instacia criada",g)
+#     u = g.get_user()
+#     print(u)
+    
+#     try:
+#         repo = u.create_repo(
+#             args.name,
+#             allow_rebase_merge = True,
+#             auto_init = False,
+#             description = f"{args.name} repository.",
+#             has_projects = False,
+#             license_template = "gpl-3.0",
+#             private = True
+#         )
+#     except Exception as e:
+#         print(e)
