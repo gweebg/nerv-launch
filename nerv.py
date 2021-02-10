@@ -2,6 +2,7 @@ import argparse
 import os
 import sys
 import subprocess
+import requests
 
 from git import Repo
 import keyboard
@@ -180,6 +181,8 @@ def new_folder(path,name):
 
 def git():
     
+    print("\n")
+
     with open("log.txt","r") as file:
         info = file.read().split('\n')
         file.close()
@@ -190,21 +193,31 @@ def git():
     
     f = Fernet(key)
     t = (info[0]).encode("utf-8")
+
     token = (f.decrypt(t)).decode('utf-8')
-    
     token = token.replace('{','')
     token = token.replace('}','')
     
-    user = info[1]
-    editor = info[2]
     git_user = info[-1]
     
-    print(f"{token}\n{user}\n{editor}\n{git_user}") 
-    
-    print(f"Repository created : https://github.com/{git_user}/{args.name} ")
-    
-    
+    #print(f"{token}\n{user}\n{editor}\n{git_user}") 
+    print("Creating new repository...")
+    #token = "ab819535bdbecf678475e90390441772e9049e7e" 
+    #TODO TOKEN MAL FORMATADO
 
+    API_URL = "https://api.github.com"
+    payload = '{"name": "' + args.name + '", "private": true }'
+    headers = {
+        "Authorization": "token " + token,
+        "Accept": "application/vnd.github.v3+json"
+    } 
+
+    r = requests.post(API_URL + "/user/repos", data = payload, headers = headers)
+
+    if r.status_code != 201: 
+        print(colored(f"Something went wrong - Error {r.status_code}","red"))
+    else:
+        print(colored(f"Repository created : https://github.com/{git_user}/{args.name} ","green"))
 
 def create_venv(lan):
     if lan == "python3": 
