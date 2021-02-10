@@ -6,7 +6,6 @@ import requests
 
 from git import Repo
 import keyboard
-import stdiomask
 from colorama import init
 from cryptography.fernet import Fernet
 from termcolor import colored
@@ -30,6 +29,7 @@ nerv -l python3 -e vscode -g gpl3
 """    
 
 init()
+key = True
 
 parser = argparse.ArgumentParser()
 parser.add_argument("-n", "--name", type = str, required = True, help = "Project Name")
@@ -58,6 +58,7 @@ class bcolors:
 
 def setup():
     
+    global key
     # Info message
     print("\nLooks like this is your first time using Nerv-Launch.")
     print("In order to continue, please, complete the setup. Keep in mind that this is only required one time.\n")
@@ -92,24 +93,22 @@ def setup():
             
             username = input(f"  {bcolors.WARNING}(*){bcolors.ENDC} Please enter your Github username : ")
             token = input(f"  {bcolors.WARNING}(*){bcolors.ENDC} Please provide your authentication token for your Github account : ")
-            key = Fernet.generate_key() # secret key for encription 
             
-            f = Fernet(key)
-            encrypted = f.encrypt(b"{token}")
-            
-            # decrypted_message = f.decrypt(encrypted_message)
-
-            # print(decrypted_message.decode())
-            
+            # Sets the api token as an env variable.
+            if 'GIT_TOKEN' in os.environ:
+                print(colored("Environmental variable already existent please rename it.","red"))
+            else: 
+                os.system(f"echo 'export GIT_TOKEN='{token}'' >> ~/.bashrc")
+                print(colored("\nThe token has been saved as an environmental variable.","yellow"))
+                print(colored("To change the token run the command [nerv --token].\n","yellow"))
+                print(colored("Restart your terminal.\n","red"))
+               
             file = open("log.txt","w")
-            e = encrypted.decode("utf-8")
-            file.write(f"{e}\n{user}\n{editor}\n{username}")
+            file.write(f"{user}\n{editor}\n{username}") # Username , default editor, Github name
             file.close()
             
-            file = open("key.key","w") 
-            file.write(key.decode('utf-8'))
-            
-            print(colored("\nSetup finished.\n","green"))
+            print(colored("Setup finished.\n","green"))
+            sys.exit()
             
         except Exception as e:
             
@@ -122,11 +121,10 @@ def setup():
             f.write(f"{user}\n{editor}")
             f.close()
         
-        ghub = False
+        key = False
         
         print(colored("\nSetup finished.\n","green"))
-        
-            
+          
 def check_lan(lan):
     if lan == 'python3':
         if os.system("python --version > /dev/null") != 0:
@@ -181,40 +179,30 @@ def new_folder(path,name):
 
 def git():
     
-    print("\n")
-
+    # Opens the log.txt file to read the github username.
     with open("log.txt","r") as file:
         info = file.read().split('\n')
         file.close()
-     
-    with open("key.key","r") as keyf:
-        key = keyf.read()
-        keyf.close()
     
-    f = Fernet(key)
-    t = (info[0]).encode("utf-8")
-
-    token = (f.decrypt(t)).decode('utf-8')
-    token = token.replace('{','')
-    token = token.replace('}','')
+    git_user = info[-1] # Github username.
     
-    git_user = info[-1]
-    
-    #print(f"{token}\n{user}\n{editor}\n{git_user}") 
     print("Creating new repository...")
-    #token = "ab819535bdbecf678475e90390441772e9049e7e" 
-    #TODO TOKEN MAL FORMATADO
+    
+    # Gets the token saved as env variable.
+    GIT = os.environ.get("GIT_TOKEN")
+    API_URL = "https://api.github.com" # API base url, useless when in this format.
+    payload = '{"name": "' + args.name + '", "private": true }' # Data about the new repository such as name and privacy.
 
-    API_URL = "https://api.github.com"
-    payload = '{"name": "' + args.name + '", "private": true }'
+    # Authentication on the API using the OAuth token provided by the user on the setup.
     headers = {
-        "Authorization": "token " + token,
+        "Authorization": "token " + GIT,
         "Accept": "application/vnd.github.v3+json"
     } 
 
+    # POST request on the API. 
     r = requests.post(API_URL + "/user/repos", data = payload, headers = headers)
 
-    if r.status_code != 201: 
+    if r.status_code != 201: # 201 is the OK code, meaning the repository has been created.
         print(colored(f"Something went wrong - Error {r.status_code}","red"))
     else:
         print(colored(f"Repository created : https://github.com/{git_user}/{args.name} ","green"))
@@ -244,13 +232,6 @@ def create_venv(lan):
         else: 
             os.system("python3 -m venv env")
     
-# if __name__ == "__main__": 
-#     if check_lan(args.language):
-#         print("Language available.")
-#         # Creates the project folder.
-#         new_folder(args.path,args.name)
-#         #if args.git then git() else pass
-       
 if __name__ == "__main__":
     if os.path.isfile("log.txt"):
         # Meter tudo aqui sem o setup
@@ -258,25 +239,5 @@ if __name__ == "__main__":
         pass
     else: 
         setup()
-        git()
         # Meter tudo o resto 
 
-    
-
-# g = Github(token)
-#     print("instacia criada",g)
-#     u = g.get_user()
-#     print(u)
-    
-#     try:
-#         repo = u.create_repo(
-#             args.name,
-#             allow_rebase_merge = True,
-#             auto_init = False,
-#             description = f"{args.name} repository.",
-#             has_projects = False,
-#             license_template = "gpl-3.0",
-#             private = True
-#         )
-#     except Exception as e:
-#         print(e)
