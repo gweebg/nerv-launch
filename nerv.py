@@ -96,7 +96,21 @@ def setup():
             
             # Sets the api token as an env variable.
             if 'GIT_TOKEN' in os.environ:
-                print(colored("Environmental variable already existent please rename it.","red"))
+                x = input(print("\n{bcolors.WARNING}(!){bcolors.ENDC} Environmental variable already existent please rename it.\n(!) Do you wish to use it ? (y/n)","yellow"))
+
+                while True: 
+                    if x == 'y' or x == 'n':
+                        if x == 'y':
+                            print(colored("\nUsing existing token.\n","yellow"))
+                            print(colored("To change the token run the command [nerv --token].\n","yellow"))
+                            break
+                        else:
+                            print(colored("Sugestion : rename the variable on ~/.bashrc ","red"))
+                            input("Press Enter To Exit...")
+                            sys.exit()
+                    else:
+                        pass
+
             else: 
                 os.system(f"echo 'export GIT_TOKEN='{token}'' >> ~/.bashrc")
                 print(colored("\nThe token has been saved as an environmental variable.","yellow"))
@@ -186,12 +200,12 @@ def git():
     
     git_user = info[-1] # Github username.
     
-    print("Creating new repository...")
+    print("\n Creating new repository...")
     
     # Gets the token saved as env variable.
     GIT = os.environ.get("GIT_TOKEN")
     API_URL = "https://api.github.com" # API base url, useless when in this format.
-    payload = '{"name": "' + args.name + '", "private": true }' # Data about the new repository such as name and privacy.
+    payload = '{"name": "' + args.name + '", "private": false }' # Data about the new repository such as name and privacy.
 
     # Authentication on the API using the OAuth token provided by the user on the setup.
     headers = {
@@ -205,7 +219,64 @@ def git():
     if r.status_code != 201: # 201 is the OK code, meaning the repository has been created.
         print(colored(f"Something went wrong - Error {r.status_code}","red"))
     else:
-        print(colored(f"Repository created : https://github.com/{git_user}/{args.name} ","green"))
+        print(f"{bcolors.OKGREEN}  ʟ Repository created :{bcolors.ENDC} https://github.com/{git_user}/{args.name} ")
+    
+    print(colored("\n Starting up your project :\n"))
+
+    # Project build up
+    os.chdir(os.path.expanduser("~")) # Changing to root directory.
+    os.chdir(os.getcwd() if args.path == "." else args.path) # Changes the directory to clone the repository.
+    
+    try: 
+        # Cloning the repository
+        print("  ʟ Cloning the repository..")
+        os.system(f"git clone -q https://{GIT}@github.com/gweebg/{args.name}.git 2>&1 | grep -v 'warning: You appear to have cloned an empty repository.'")
+        print("    ʟ Successful\n")
+
+    except Exception as e:
+        # Catching exceptions.
+        print(colored(f"An exception has occured :\n{e}"))
+        input("Press Enter To Exit...")
+        sys.exit()
+
+    # Adding folders and README.md
+    print("  ʟ Adding files..")
+    os.mkdir(f"{args.name}/src") # src
+    os.system(f'touch {args.name}/src/README.md') # README
+    os.system(f"echo '# Source code' >> {args.name}/src/README.md") # README update
+
+
+    os.mkdir(f"{args.name}/docs") # docs
+    os.system(f'touch {args.name}/docs/README.md') 
+    os.system(f"echo '# Documentation' >> {args.name}/docs/README.md") 
+
+    os.mkdir(f"{args.name}/lib") # lib
+    os.system(f'touch {args.name}/lib/README.md') 
+    os.system(f"echo '# Libs' >> {args.name}/lib/README.md") 
+
+    os.system(f'touch {args.name}/README.md') 
+    os.system(f"echo '# {args.name}' >> {args.name}/README.md")
+
+    print("    ʟ Successful\n ")
+
+    # Pushing to the repository
+    print("  ʟ Pushing to remote..")
+    os.chdir(os.path.expanduser("~")) # Goes to root
+    os.chdir(f"{args.path}/{args.name}") # Goes to new repo folder.
+    subprocess.run(["git","add","."],stdout=subprocess.DEVNULL)
+    subprocess.run(["git","commit","-m","Init"],stdout=subprocess.DEVNULL)
+
+    try:
+        subprocess.run(["git","push","-q", f"https://{GIT}@github.com/gweebg/{args.name}.git"],stdout=subprocess.DEVNULL)
+        print("    ʟ Successful\n ")
+        print(colored(" Project created.","green"))
+
+    except Exception as ex: 
+        print(colored(f"An exception has occured while pushing to remote :\n{ex}"))
+        input("Press Enter To Exit...")
+        sys.exit()
+
+
 
 def create_venv(lan):
     if lan == "python3": 
