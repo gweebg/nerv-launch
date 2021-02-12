@@ -1,39 +1,49 @@
 import argparse
 import os
+import string
 import subprocess
 import sys
-import string
 from argparse import RawTextHelpFormatter
 
-import keyboard
 import requests
 from colorama import init
-from cryptography.fernet import Fernet
-from git import Repo
 from termcolor import colored
 
 """
-Suported languages: 
-    .python
-    .c
-    .haskell
-    .java 
-
 Arguments : 
-    -n * --name
-    -l * --language
-    -e * --editor
-    -p * --path (optional)
-    -g --git
-    -h --help 
-    
-nerv -l python3 -e vscode -g gpl3
+    -n * --name (Project name)
+    -l --license (Project license)
+    -e * --editor (Code editor)
+    -p * --path (Project path)
+    -g --git (Disable repository creation)
+    -h --help  (Help)
+    -q --quiet (Runs the code quietly)
 """    
 
+# Inits colorama colors.
 init()
-key = True
+directory = os.getcwd()
 
-# Class of colors for the terminal.
+# Redirect stdout to /dev/null
+# https://codereview.stackexchange.com/questions/25417/is-there-a-better-way-to-make-a-function-silent-on-need
+class NoStdStreams(object):
+    def __init__(self,stdout = None, stderr = None):
+        self.devnull = open(os.devnull,'w')
+        self._stdout = stdout or self.devnull or sys.stdout
+        self._stderr = stderr or self.devnull or sys.stderr
+
+    def __enter__(self):
+        self.old_stdout, self.old_stderr = sys.stdout, sys.stderr
+        self.old_stdout.flush(); self.old_stderr.flush()
+        sys.stdout, sys.stderr = self._stdout, self._stderr
+
+    def __exit__(self, exc_type, exc_value, traceback):
+        self._stdout.flush(); self._stderr.flush()
+        sys.stdout = self.old_stdout
+        sys.stderr = self.old_stderr
+        self.devnull.close()
+
+# Terminal colors.
 class bcolors:
     
     HEADER = '\033[95m'
@@ -91,24 +101,20 @@ parser = argparse.ArgumentParser(description =
  (+) If you're using GitHub make sure you have an OAuth token and give it repos permissions.
  (+) The inical path of the program is /home/ (~), so to specify the path you can just state it's parents folders.
  (+) Your GitHub token gets stored as an environmental variable on ~/.bashrc as the last line.
- (+) If an error occurs during the project build-up (after creating the repo) the repo won't be deleted.""",
-formatter_class = RawTextHelpFormatter,
-epilog = 
-"""Language keywords :
-  ʟ Python3 : py3
-  ʟ C : c
-  ʟ Haskell : hs
-  ʟ Java : java\n
-Editor keywords :
+ (+) Check https://docs.github.com/pt/github/creating-cloning-and-archiving-repositories/licensing-a-repository to get license keywords.
+ (+) If an error occurs during the project build-up (after creating the repo) the repo won't be deleted.\n
+[Editor keywords] :
   ʟ VScode : vscode
   ʟ Sublime : subl
-  ʟ Atom : atom (requires 'Install Shell Commands')\n""")
+  ʟ Atom : atom (requires 'Install Shell Commands')\n
+""", formatter_class = RawTextHelpFormatter)
 
 parser.add_argument("-n", "--name", type = str, required = True, help = "Project Name")
-parser.add_argument("-l", "--language", type = str, required = True, help = "Coding Language" )
-parser.add_argument("-e", "--editor", type = str, required = True, help = "Text Editor")
+parser.add_argument("-l", "--license", type = str, required = False, help = "Project License")
+parser.add_argument("-e", "--editor", type = str, required = False, help = "Code Editor")
 parser.add_argument("-p", "--path", type = str, required = True, help = "Project Path")
-parser.add_argument("-g", "--git", action = "store_true", help = "Create Repository")
+parser.add_argument("-g", "--git", action = "store_true", help = "Disable Repository Creation")
+parser.add_argument("-q", "--quiet", action = "store_true", help = "Run Quietly")
 
 group = parser.add_mutually_exclusive_group()
 group.add_argument("-t", "--token", action = chToken, nargs = 0, help = "Change OAuth Token")
@@ -118,8 +124,7 @@ args = parser.parse_args()
 # print(args.name, args.language, args.editor, args.path)
 
 def setup():
-    
-    global key
+
     # Info message
     print("\nLooks like this is your first time using Nerv-Launch.")
     print("In order to continue, please, complete the setup. Keep in mind that this is only required one time.\n")
@@ -183,7 +188,7 @@ def setup():
                 print(colored("Restart your terminal.\n","red"))
                
             file = open("log.txt","w")
-            file.write(f"{user}\n{editor}\n{username}") # Username , default editor, Github name
+            file.write(f"{user}'s Profile :\n{editor}\n{username}") # Username , default editor, Github name
             file.close()
             
             print(colored("Setup finished.\n","green"))
@@ -202,8 +207,6 @@ def setup():
             f.write(f"{user}\n{editor}")
             f.close()
         
-        key = False
-        
         print(colored("\nSetup finished.\n","green"))
           
 def git():
@@ -220,7 +223,11 @@ def git():
     # Gets the token saved as env variable.
     GIT = os.environ.get("GIT_TOKEN")
     API_URL = "https://api.github.com" # API base url, useless when in this format.
-    payload = '{"name": "' + args.name + '", "private": false }' # Data about the new repository such as name and privacy.
+
+    if args.license != None:
+        payload = '{"name": "' + args.name + '", "private": false, "license_template": "' + args.license + '"}' # Data about the new repository such as name and privacy.
+    else:
+        payload = '{"name": "' + args.name + '", "private": false}'
 
     # Authentication on the API using the OAuth token provided by the user on the setup.
     headers = {
@@ -294,11 +301,20 @@ def git():
 
 def open_repo():
 
-    print(colored("Opening project...","blue"))
-    os.chdir(os.path.expanduser("~"))
-    os.chdir(f"{args.path}/{args.name}")
+    os.chdir(directory)
+
+    if args.editor == None:
+        with open("log.txt","r") as f:
+            lines = f.readlines()
+            editor = (lines[1].lower())
+            editor = editor.strip('\n')
+    else: 
+        editor = (args.editor).lower()
     
-    editor = (args.editor).lower()
+    print(colored(" Opening folder...\n","cyan"))
+    os.chdir(os.path.expanduser("~"))
+    os.chdir(f"{args.path}/{args.name}" if not args.path == "." else f"{os.getcwd()}/{args.name}")
+    
     vs = ["vscode","vs","code"]
     subl = ["sublime","subl"]
     atom = ["atom"]
@@ -311,22 +327,66 @@ def open_repo():
         elif editor in atom:
             subprocess.run(["atom", "."], stdout = subprocess.DEVNULL)
         else: 
-            print(colored("Editor not supported (yet).","red"))
-            input("Press Enter To Exit...")
+            print(colored(" Editor not supported.","red"))
+            input(" Press Enter To Exit...")
             sys.exit()
-    
+        
     except Exception as error: 
-        print(colored(f"Something went wrong while opening the project.\nError : {error}"))
+        print(colored(f" Something went wrong while opening the project.\nError : {error}"))
         input("Press Enter To Exit...")
         sys.exit()
 
+# Only creates the project folder without creating a new repository.
+def files_only():
 
+    os.chdir(os.path.expanduser("~")) # Changing to root directory.
+    os.chdir(os.getcwd() if args.path == "." else args.path) # Changes the directory to clone the repository.    
+
+    os.mkdir(args.name)
+
+    # Adding folders and README.md
+    print("\n Adding files...")
+    os.mkdir(f"{args.name}/src") # src
+    os.system(f'touch {args.name}/src/README.md') # README
+    os.system(f"echo '# Source code' >> {args.name}/src/README.md") # README update
+
+    # Creates documentation folder and adds a README to it.
+    os.mkdir(f"{args.name}/docs") # docs
+    os.system(f'touch {args.name}/docs/README.md') 
+    os.system(f"echo '# Documentation' >> {args.name}/docs/README.md") 
+
+    # Creates lib folder and adds a README to it.
+    os.mkdir(f"{args.name}/lib") # lib
+    os.system(f'touch {args.name}/lib/README.md') 
+    os.system(f"echo '# Libs' >> {args.name}/lib/README.md") 
+
+    # Creates README to the frontpage of the repository.
+    os.system(f'touch {args.name}/README.md') 
+    os.system(f"echo '# {args.name}' >> {args.name}/README.md") # Writes the project name to the README.md file.
+    print("  ʟ Successful\n")
+
+# Runs every function according to the arguments given.
 if __name__ == "__main__":
+
     if os.path.isfile("log.txt"):
-        git()
-        open_repo()
-        sys.exit()   
+        if args.quiet:
+            with NoStdStreams():
+                if not args.git:
+                    git()
+                    open_repo()
+                    sys.exit()
+                else: 
+                    files_only()
+                    open_repo()
+        else:
+            if not args.git:
+                git()
+                open_repo()
+                sys.exit()
+            else: 
+                files_only()
+                open_repo()
     else: 
         setup()
-        
+      
 
