@@ -2,6 +2,7 @@ import argparse
 import os
 import subprocess
 import sys
+import string
 from argparse import RawTextHelpFormatter
 
 import keyboard
@@ -32,12 +33,65 @@ nerv -l python3 -e vscode -g gpl3
 init()
 key = True
 
+# Class of colors for the terminal.
+class bcolors:
+    
+    HEADER = '\033[95m'
+    OKBLUE = '\033[94m'
+    OKCYAN = '\033[96m'
+    OKGREEN = '\033[92m'
+    WARNING = '\033[33m'
+    FAIL = '\033[91m'
+    ENDC = '\033[0m'
+    BOLD = '\033[1m'
+    UNDERLINE = '\033[4m'
+
+# Class for changing the Github token.
+class chToken(argparse.Action):
+
+    def token(self):
+        print(colored("\nChanging Github OAuth token : ","green"))
+
+        # Asking for the new token, gets stored on new_token variable.
+        new_token = input(f"{bcolors.OKGREEN}(+){bcolors.ENDC} Please submit your new Github OAuth token : ")
+
+        # Changing into the home directory and deleting the old token.
+        os.chdir(os.path.expanduser("~")) # dir = ~ 
+        
+        # Deletes the old token from .bashrc
+        try:
+            with open(".bashrc","r+") as f: # Open .bashrc as read and write
+                new_f = f.readlines()
+                f.seek(0) # Set pointer position to 0 
+                for line in new_f:
+                    if "export GIT_TOKEN" not in line: # If it's not the key phrase then rewrites the same phrase 
+                        f.write(line)
+                f.truncate() # If it's the key phrase then truncates it
+                    
+            # Adds the new token as a new environmental variable 
+            os.system(f"echo 'export GIT_TOKEN='{new_token}'' >> ~/.bashrc") 
+            print(colored("\nRestart your terminal to commit the changes.\nOAuth token updated successfully.\n","green"))
+            input("Press Enter To Exit...")
+            sys.exit()
+
+        except Exception as e: 
+            # "Raises" an error if an exception is risen.
+            print(colored(f"\nSomething went wrong while replacing the old token.\n Error : {e}\n","red"))
+            input("Press Enter To Exit...")
+            sys.exit()
+       
+    def __call__(self, parser, namespace, values, option_string=None):
+        self.token()
+        parser.exit()
+
 parser = argparse.ArgumentParser(description = 
-"""(+) The name given alongside the name flag will be your repository name.
-(+) If you're using GitHub make sure you have an OAuth token and give it repos permissions.
-(+) The inical path of the program is /home/ (~), so to specify the path you can just state it's parents folders.
-(+) Your GitHub token gets stored as an environmental variable on ~/.bashrc as the last line.
-(+) If an error occurs during the project build-up (after creating the repo) the repo won't be deleted.""",
+"""
+[FAQ] : 
+ (+) The name given alongside the name flag will be your repository name.
+ (+) If you're using GitHub make sure you have an OAuth token and give it repos permissions.
+ (+) The inical path of the program is /home/ (~), so to specify the path you can just state it's parents folders.
+ (+) Your GitHub token gets stored as an environmental variable on ~/.bashrc as the last line.
+ (+) If an error occurs during the project build-up (after creating the repo) the repo won't be deleted.""",
 formatter_class = RawTextHelpFormatter,
 epilog = 
 """Language keywords :
@@ -53,28 +107,15 @@ Editor keywords :
 parser.add_argument("-n", "--name", type = str, required = True, help = "Project Name")
 parser.add_argument("-l", "--language", type = str, required = True, help = "Coding Language" )
 parser.add_argument("-e", "--editor", type = str, required = True, help = "Text Editor")
-parser.add_argument("-p", "--path", type = str, required = False, help = "Project Path")
+parser.add_argument("-p", "--path", type = str, required = True, help = "Project Path")
+parser.add_argument("-g", "--git", action = "store_true", help = "Create Repository")
 
 group = parser.add_mutually_exclusive_group()
-group.add_argument("-g", "--git", action = "store_true", help = "Create Repository")
-
+group.add_argument("-t", "--token", action = chToken, nargs = 0, help = "Change OAuth Token")
 
 args = parser.parse_args()
 
 # print(args.name, args.language, args.editor, args.path)
-
-# Class of colors for the terminal.
-class bcolors:
-    
-    HEADER = '\033[95m'
-    OKBLUE = '\033[94m'
-    OKCYAN = '\033[96m'
-    OKGREEN = '\033[92m'
-    WARNING = '\033[33m'
-    FAIL = '\033[91m'
-    ENDC = '\033[0m'
-    BOLD = '\033[1m'
-    UNDERLINE = '\033[4m'
 
 def setup():
     
@@ -165,39 +206,6 @@ def setup():
         
         print(colored("\nSetup finished.\n","green"))
           
-def check_lan(lan):
-    if lan == 'python3':
-        if os.system("python --version > /dev/null") != 0:
-            print(colored("Language/Compiler not installed.","yellow"))
-            return False
-        else: 
-            return True
-                
-    elif lan == 'haskell':
-        if os.system("ghci --version > /dev/null") != 0: 
-            print(colored("Language/Compiler not installed.","yellow"))
-            return False
-        else: 
-            return True
-            
-    elif lan == 'c':
-        if os.system("gcc --version > /dev/null") != 0:
-            print(colored("Language/Compiler not installed.","yellow"))
-            return False
-        else: 
-            return True
-        
-    elif lan == 'java':
-        if os.system("java -version > /dev/null") != 0:
-            print(colored("Language/Compiler not installed.","yellow"))
-            return False
-        else: 
-            return True
-        
-    else: 
-        print(colored("Language not suported.\n Use [nerv -h] to check all the supported languages.","yellow"))
-        return False
-
 def git():
     
     # Opens the log.txt file to read the github username.
@@ -226,7 +234,7 @@ def git():
     if r.status_code != 201: # 201 is the OK code, meaning the repository has been created.
         print(colored(f"Something went wrong - Error {r.status_code}","red"))
     else:
-        print(f"{bcolors.OKGREEN}  ʟ Repository created :{bcolors.ENDC} https://github.com/{git_user}/{args.name} ")
+        print(f"  ʟ Repository created : https://github.com/{git_user}/{args.name} ")
     
     print(colored("\n Starting up your project :\n"))
 
@@ -277,19 +285,48 @@ def git():
     try:
         subprocess.run(["git","push","-q", f"https://{GIT}@github.com/gweebg/{args.name}.git"],stdout=subprocess.DEVNULL) # > git push -q ...
         print("    ʟ Successful\n ")
-        print(colored(" Project created.","green"))
+        print(colored(" Project build-up finished.","green"))
 
     except Exception as ex: 
         print(colored(f"An exception has occured while pushing to remote :\n{ex}"))
         input("Press Enter To Exit...")
         sys.exit()
+
+def open_repo():
+
+    print(colored("Opening project...","blue"))
+    os.chdir(os.path.expanduser("~"))
+    os.chdir(f"{args.path}/{args.name}")
     
+    editor = (args.editor).lower()
+    vs = ["vscode","vs","code"]
+    subl = ["sublime","subl"]
+    atom = ["atom"]
+
+    try: 
+        if editor in vs:
+            subprocess.run(["code", "."], stdout = subprocess.DEVNULL)
+        elif editor in subl: 
+            subprocess.run(["subl", "."], stdout = subprocess.DEVNULL)
+        elif editor in atom:
+            subprocess.run(["atom", "."], stdout = subprocess.DEVNULL)
+        else: 
+            print(colored("Editor not supported (yet).","red"))
+            input("Press Enter To Exit...")
+            sys.exit()
+    
+    except Exception as error: 
+        print(colored(f"Something went wrong while opening the project.\nError : {error}"))
+        input("Press Enter To Exit...")
+        sys.exit()
+
+
 if __name__ == "__main__":
     if os.path.isfile("log.txt"):
-        # Meter tudo aqui sem o setup
         git()
-        pass
+        open_repo()
+        sys.exit()   
     else: 
         setup()
-        # Meter tudo o resto 
+        
 
