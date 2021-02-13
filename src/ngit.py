@@ -6,8 +6,16 @@ import requests
 from colorama import init
 from termcolor import colored
 
+"""
+This module is responsible for the
+creation of the repository, cloning, 
+creation of all the folders, subfolders and README/License,
+adding, commiting and pushing.
+"""
+
 def git(name,lic,path):
     
+    # Startup of the coloroma package.
     init()
 
     # Opens the log.txt file to read the github username.
@@ -19,10 +27,16 @@ def git(name,lic,path):
     
     print("\n Creating new repository...")
     
-    # Gets the token saved as env variable.
+    # Gets the token saved as env variable on the setup on nerv.py .
     GIT = os.environ.get("GIT_TOKEN")
     API_URL = "https://api.github.com" # API base url, useless when in this format.
 
+    """
+    Checks if the license flag was used,
+    if so, adds the license when creating the repository
+    else only creates the repo. 
+    """
+    
     if lic != None:
         payload = '{"name": "' + name + '", "private": false, "license_template": "' + lic + '"}' # Data about the new repository such as name and privacy.
     else:
@@ -44,7 +58,11 @@ def git(name,lic,path):
     
     print(colored("\n Starting up your project :\n"))
 
-    # Project build up
+    """
+    Cloning the repository created above,
+    creating its folders and subfolders,
+    commiting the changes and pushing to remote. 
+    """
     os.chdir(os.path.expanduser("~")) # Changing to root directory.
     os.chdir(os.getcwd() if path == "." else path) # Changes the directory to clone the repository.
     
@@ -88,6 +106,7 @@ def git(name,lic,path):
     subprocess.run(["git","add","."],stdout=subprocess.DEVNULL) # > git add .
     subprocess.run(["git","commit","-m","Init"],stdout=subprocess.DEVNULL) # > git commit -m "Init"
 
+    # Pushing the updated repository to Github.
     try:
         subprocess.run(["git","push","-q", f"https://{GIT}@github.com/gweebg/{name}.git"],stdout=subprocess.DEVNULL) # > git push -q ...
         print("    ʟ Successful\n ")

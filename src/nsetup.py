@@ -6,6 +6,12 @@ import requests
 from colorama import init
 from termcolor import colored
 
+"""
+This module is responsible for the 
+initial setup that is required in order 
+to use Github on your projects.
+"""
+
 class colors:
     
     HEADER = '\033[95m'
@@ -18,7 +24,7 @@ class colors:
     BOLD = '\033[1m'
     UNDERLINE = '\033[4m'
 
-def setup():
+def setup(): # Setup function 
 
     # Info message
     print("\nLooks like this is your first time using Nerv-Launch.")
@@ -26,7 +32,7 @@ def setup():
     
     while True:
         
-        # Get user name for greetings
+        # Get user name used on profile managing.
         user = input(f"{colors.OKGREEN}[1]{colors.ENDC} User: ")
         if not user.strip(): # Check if it is not an empty string
             print(colored("Please enter a username.\n","yellow")) 
@@ -40,7 +46,7 @@ def setup():
     
     while True:
 
-        # Use github for project
+        # Use github for project ? 
         o = input(f"{colors.OKGREEN}[3]{colors.ENDC} Do you wish to have access to Github when creating a new project ? (y/n) ")
         if o == 'y' or o =='n':
             break
@@ -52,15 +58,26 @@ def setup():
         
         try:
             
+            # Taking the Github username as well as the OAuth token.
             username = input(f"  {colors.WARNING}(*){colors.ENDC} Please enter your Github username : ")
             token = input(f"  {colors.WARNING}(*){colors.ENDC} Please provide your authentication token for your Github account : ")
             
-            # Sets the api token as an env variable.
-            if 'GIT_TOKEN' in os.environ:
+            """
+            The setup() function will only execute if there isn't a 
+            'log.txt' file on the path of the script.
+            But that doesn't mean that the script hasn't been run at least once,
+            meaning that there could be a GIT_TOKEN env variable already set.
+            So, first, we need to check it, if it has the variable, we ask if 
+            the user wants to use it or not.
+            """
+            
+            if 'GIT_TOKEN' in os.environ: # Checks for already existing variable.
+                
+                # Do you want to use the exsiting variable ? 
                 x = input(f"\n{colors.WARNING}(!){colors.ENDC} Environmental variable already existent please rename it.\n{colors.WARNING}(!){colors.ENDC} Do you wish to use it ? (y/n)")
 
                 while True: 
-
+                    
                     x = input(f"\n{colors.WARNING}(!){colors.ENDC} Environmental variable already existent please rename it.\n{colors.WARNING}(!){colors.ENDC} Do you wish to use it ? (y/n) ")
                     
                     if x == 'y' or x == 'n':
@@ -77,11 +94,14 @@ def setup():
                     sys.exit()
 
             else: 
+                
+                # Saving the token at .bashrc if there isn't a GIT_TOKEN variable.
                 os.system(f"echo 'export GIT_TOKEN='{token}'' >> ~/.bashrc")
                 print(colored("\nThe token has been saved as an environmental variable.","yellow"))
                 print(colored("To change the token run the command [nerv --token].\n","yellow"))
                 print(colored("Restart your terminal.\n","red"))
-               
+            
+            # Logs the user information into "log.txt" .
             file = open("log.txt","w")
             file.write(f"{user}'s Profile :\n{editor}\n{username}") # Username , default editor, Github name
             file.close()
@@ -98,6 +118,7 @@ def setup():
             sys.exit()
                 
     else: 
+        # Only runs if the user doesn't want to use Github.
         with open("log.txt","w") as f:
             f.write(f"{user}\n{editor}")
             f.close()
