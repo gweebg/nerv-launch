@@ -1,6 +1,7 @@
 import sys
 import os 
 import subprocess
+import json
 
 import requests
 from colorama import init
@@ -18,13 +19,11 @@ def git(name,lic,path):
     # Startup of the coloroma package.
     init()
 
-    # Opens the log.txt file to read the github username.
-    with open("log.txt","r") as file:
-        info = file.read().split('\n')
-        file.close()
-    
-    git_user = info[-1] # Github username.
-    
+    # Opens the config.json file to read the github username.
+    with open("config.json","r") as file:
+        config = json.load(file)
+        git_user = config["github_user"]
+        
     print("\n Creating new repository...")
     
     # Gets the token saved as env variable on the setup on nerv.py .

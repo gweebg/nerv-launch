@@ -3,29 +3,38 @@ import os
 import string
 import subprocess
 import sys
+import json
 from argparse import RawTextHelpFormatter
 
 import requests
 from colorama import init
 from termcolor import colored
 
-import ngit
-import nsetup
+import git
+import setup
 
 """
+Project launcher for unix systems written in Python3 and some shell script.
+Easy to use and costumizable.
+To use it, call the script and add the arguments down bellow.
+
 Arguments : 
-    -n * --name (Project name)
+    -n * --name (Project name) 
     -l --license (Project license)
-    -e * --editor (Code editor)
+    -e * --editor (Code editor) [optional]
     -p * --path (Project path)
-    -g --git (Disable repository creation)
+    -g --git (Disable repository creation) [optional]
     -h --help  (Help)
-    -q --quiet (Runs the code quietly)
+    -q --quiet (Runs the code quietly) [optional]
+    
+Example : 
+    python3 nerv.py -n project_name -l mit -p project_path
+    nerv -n project_name -p . -g
 """    
 
 # Inits colorama colors.
 init()
-directory = os.getcwd()
+directory = os.getcwd() # Initial directory, where the script is
 
 # Redirect stdout to /dev/null
 # https://codereview.stackexchange.com/questions/25417/is-there-a-better-way-to-make-a-function-silent-on-need
@@ -131,7 +140,7 @@ parser.add_argument("-q", "--quiet", action = "store_true", help = "Run Quietly"
 group = parser.add_mutually_exclusive_group()
 # Change OAuth token option set as -t
 group.add_argument("-t", "--token", action = chToken, nargs = 0, help = "Change OAuth Token")
-
+# group.add_argument("-o", "--options", nargs = 0, help = "Customize the folders.")
 # Generates a list with all the arguments parsed out. These arguments can be called by using args.name_of_argument .
 args = parser.parse_args()
 
@@ -139,7 +148,7 @@ args = parser.parse_args()
 def open_repo():
     """
     We need to change the current directory
-    to the initial one, since it's where 'log.txt' is
+    to the initial one, since it's where 'config.json' is
     located. open_repo() is always executed after
     git() and so the directory wouldn't be the inital.
     """
@@ -151,10 +160,9 @@ def open_repo():
     has been set during setup. If it did we just take it from args.
     """
     if args.editor == None:
-        with open("log.txt","r") as f: # Open "log.txt"
-            lines = f.readlines()
-            editor = (lines[1].lower()) # Retrive the second line and lower it.
-            editor = editor.strip('\n') # Strip the '\n' so we can compare it later.
+        with open("config.json","r") as f: # Open "config.json"
+            config = json.load(f)
+            editor = config["default_editor"]
     else: 
         editor = (args.editor).lower() # Set editor as the argument.
     
@@ -233,14 +241,18 @@ if __name__ == "__main__":
     are handled here. 
     """
 
+    with open("config.json","r") as f:
+        config = json.load(f)
+        key = config["setup"]
+    
     os.chdir(directory) # Added for the same reason as the open_repo()
 
-     # Checking if the setup() has already been made by looking for the "log.txt" file.
-    if os.path.isfile("log.txt"): 
+     # Checking if the setup() has already been made by looking for the "setup" value on config.json .
+    if key == "True": 
         if args.quiet: # Checks if it needs to be ran in quiet mode.
             with NoStdStreams():
                 if not args.git: # Checks if it needs to create a new repository.
-                    ngit.git(args.name,args.license,args.path) # Creating repository
+                    git.git(args.name,args.license,args.path) # Creating repository
                     open_repo() # Opening the repository
                     sys.exit()
                 else: 
@@ -248,13 +260,13 @@ if __name__ == "__main__":
                     open_repo() # Opening the folder, once again.
         else:
             if not args.git:
-                ngit.git(args.name,args.license,args.path)
+                git.git(args.name,args.license,args.path)
                 open_repo()
                 sys.exit()
             else: 
                 files_only()
                 open_repo()
     else: 
-        # If there is no "log.txt" file we need to create one by doing the setup. 
-        nsetup.setup()
+        # If it's false we need to create one by doing the setup. 
+        setup.setup()
       

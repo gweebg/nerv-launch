@@ -1,0 +1,12 @@
+{
+    "profile_name": "Guilherme", 
+    "default_editor": "vscode", 
+    "github_name": "gweebg", 
+    "setup": "True",
+
+    "default_folders": true,
+    "add_readme": true,
+    "folders": "",
+    "subfolders": "",
+    "other_files": ""
+}

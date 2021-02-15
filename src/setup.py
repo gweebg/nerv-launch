@@ -1,6 +1,7 @@
 import sys
 import os 
 import subprocess
+import json
 
 import requests
 from colorama import init
@@ -63,8 +64,8 @@ def setup(): # Setup function
             token = input(f"  {colors.WARNING}(*){colors.ENDC} Please provide your authentication token for your Github account : ")
             
             """
-            The setup() function will only execute if there isn't a 
-            'log.txt' file on the path of the script.
+            The setup() function will only execute if the value 'setup' on  
+            'config.json' is set to 'True'. 
             But that doesn't mean that the script hasn't been run at least once,
             meaning that there could be a GIT_TOKEN env variable already set.
             So, first, we need to check it, if it has the variable, we ask if 
@@ -101,10 +102,17 @@ def setup(): # Setup function
                 print(colored("To change the token run the command [nerv --token].\n","yellow"))
                 print(colored("Restart your terminal.\n","red"))
             
-            # Logs the user information into "log.txt" .
-            file = open("log.txt","w")
-            file.write(f"{user}'s Profile :\n{editor}\n{username}") # Username , default editor, Github name
-            file.close()
+            # Logs the user information into "config.json" .
+            with open("config.json","r") as f:
+                config = json.load(f)
+                
+            config["profile_name"] = user
+            config["default_editor"] = editor
+            config["github_name"] = username
+            config["setup"] = "True"
+                
+            with open("config.json","w") as f:
+                json.dump(config,f)
             
             print(colored("Setup finished.\n","green"))
             input("Press Enter To Exit...")
@@ -119,8 +127,13 @@ def setup(): # Setup function
                 
     else: 
         # Only runs if the user doesn't want to use Github.
-        with open("log.txt","w") as f:
-            f.write(f"{user}\n{editor}")
-            f.close()
+        with open("config.json","w") as f:
+            config = json.load(f)
+            
+        config["profile_name"] = user
+        config["default_editor"] = editor
+        
+        with open("config.json","w") as f:
+            json.dump(config,f)
         
         print(colored("\nSetup finished.\n","green"))
