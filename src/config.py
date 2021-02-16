@@ -51,6 +51,85 @@ then add its content and finally parse the "subfolder" key
 and add the folders and files.
 """
 
+def checkConfig(path):
+    
+    """
+    Checking if the config file is setup right.
+    Check for replicated files on the same folder.
+    Check subfolders inside of subfolders, try to correct it.
+    """
+    
+    # Correct path 
+    os.chdir(path)
+    
+    # Opening the config.json file 
+    with open("config.json","r") as file:
+        config = json.load(file)
+    
+    # Checking for equal file names on the same folder.
+    data = config["folders"]
+    
+    rep = []
+    folders = []
+    for folder in data:
+        file_name = folder["files"]
+        folder_names = folder["folder_name"]
+        
+        rep.append(file_name)
+        folders.append(folder_names)
+        
+    for file_set in rep: 
+        names = file_set.split(",")
+        
+        if len(names) != len(set(names)): 
+            print(colored("Error while parsing config.json\nDuplicate file name on the same folder.","red"))
+            sys.exit()
+        else: 
+            print("passed")
+            pass
+    
+    # Checking if the folder where the subfolder is exists.
+    sub_data = config["subfolders"]
+    sub_rep = []
+    sub_name = []
+    f_name = []
+        
+    for sub_folder in sub_data:
+        inside = sub_folder["inside"]
+        file_name = sub_folder["content"]
+        name = sub_folder["sub_name"]
+        
+        f_name.append(name)
+        sub_rep.append(inside)
+        sub_name.append(file_name)
+        
+    for name in sub_rep: 
+        if name in folders:
+            pass
+        elif name in f_name:
+            pass
+        else: 
+            print(colored("Error while parsing config.json\nFolder non existent.","red"))
+            sys.exit()
+            
+    # Checking for duplicate file names in subfolders.
+    file_name = file_name.split(",")
+    for name in file_name:
+        if len(file_name) != len(set(file_name)):
+            print(colored("Error while parsing config.json\nDuplicate file name on the same subfolder.","red"))
+            sys.exit()
+        else: 
+            pass
+    
+    # Checking for subfolders inside of subfolders
+    for elem in f_name: 
+        if elem in inside:
+            return False
+        else: 
+            pass
+    
+    return True
+    
 def readConfig(path): 
     # Path where to work
     config_path = path
@@ -62,12 +141,12 @@ def readConfig(path):
     if config["add_readme"] : 
         
         if config["default_folders"] : 
-            return True
+            return True # para depois comparar caso esteja tudo setado para default
         else : 
-            getValues("config.json","/home/gwee/proj/testes")
-            
-     
-    
+            if checkConfig(path):
+                getValues("config.json","/home/gwee/proj/testes")
+            else: 
+                pass # Acabar, dar parse para adiciconar folder dentro de folder.
 def getValues(file,path): # path where the project is 
     # Open config to read
     with open(file,"r") as f:
@@ -120,11 +199,10 @@ def getValues(file,path): # path where the project is
                     os.system(f"touch {file}")
         else: 
             print(colored("Error on config.json\nThe folder {inside} does not exist within {path}.","red"))
-
-# Ver casos onde o folder já existe ou files com nomes iguais, dois folder com o mesmo nome nas configs (fazer função para isso)
-# Ver se é criado subfolder dentro de um subfolder e testar (dar fix)
-# Tutorial de como editar as configs 
     
-readConfig(os.getcwd())
-        
+if checkConfig(os.getcwd()):
+    print("True")
+else:
+    print("False")
+# readConfig(os.getcwd())        
     

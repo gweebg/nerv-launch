@@ -30,8 +30,8 @@
         },
         {
             "sub_name": "package",
-            "inside": "lib",
-            "content": "script.sh"
+            "inside": "src",
+            "content": "script.sh,script.py"
             
         }
     ]
