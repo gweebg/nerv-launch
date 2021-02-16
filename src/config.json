@@ -6,6 +6,7 @@
 
     "default_folders": false,
     "add_readme": true,
+    "custom_files": "",
     "folders" : 
     [
         {
@@ -37,3 +38,4 @@
     ]
 
 }
+

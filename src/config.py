@@ -51,6 +51,8 @@ then add its content and finally parse the "subfolder" key
 and add the folders and files.
 """
 
+current_dir = os.getcwd()
+
 def checkConfig(path):
     
     """
@@ -134,6 +136,7 @@ def readConfig(path):
     # Path where to work
     config_path = path
     os.chdir(config_path)
+    global current_dir
     
     with open("config.json","r") as file:
         config = json.load(file)
@@ -144,10 +147,12 @@ def readConfig(path):
             return True # para depois comparar caso esteja tudo setado para default
         else : 
             if checkConfig(path):
-                getValues("config.json","/home/gwee/proj/testes")
+                createFolder("config.json","/home/gwee/proj/testes")
+                os.chdir(current_dir)
+                createSub("config.json","/home/gwee/proj/testes")
             else: 
                 pass # Acabar, dar parse para adiciconar folder dentro de folder.
-def getValues(file,path): # path where the project is 
+def createFolder(file,path): # path where the project is 
     # Open config to read
     with open(file,"r") as f:
         config = json.load(f)
@@ -176,33 +181,39 @@ def getValues(file,path): # path where the project is
             os.chdir(path)
             os.mkdir(name)
             
+def createSub(file,path):
+    
+    global current_dir
+    with open(file,"r") as file:
+        config = json.load(file)
+        
     # Subfolder creation 
     sub_data = config["subfolders"]
-    for sub in sub_data: 
-        
-        sub_name = sub["sub_name"]
-        inside = sub["inside"]
-        files = sub["content"]
-        
-        if os.path.exists(f"{path}/{inside}"):
-            
-            if len(files.strip()) != 0: 
-                
-                files = files.split(",")
-                print(files)
-                
-                os.chdir(f"{path}/{inside}")
-                os.mkdir(sub_name)
-                os.chdir(f"{path}/{inside}/{sub_name}")
-                
-                for file in files: 
-                    os.system(f"touch {file}")
-        else: 
-            print(colored("Error on config.json\nThe folder {inside} does not exist within {path}.","red"))
+    if checkConfig(current_dir):
+        for sub in sub_data: 
+
+            sub_name = sub["sub_name"]
+            inside = sub["inside"]
+            files = sub["content"]
+
+            if os.path.exists(f"{path}/{inside}"):
+
+                if len(files.strip()) != 0: 
+
+                    files = files.split(",")
+                    print(files)
+
+                    os.chdir(f"{path}/{inside}")
+                    os.mkdir(sub_name)
+                    os.chdir(f"{path}/{inside}/{sub_name}")
+
+                    for file in files: 
+                        os.system(f"touch {file}")
+            else: 
+                print(colored("Error on config.json\nThe folder {inside} does not exist within {path}.","red"))
+                sys.exit()
+    else: 
+        pass
     
-if checkConfig(os.getcwd()):
-    print("True")
-else:
-    print("False")
-# readConfig(os.getcwd())        
+readConfig(os.getcwd())        
     
