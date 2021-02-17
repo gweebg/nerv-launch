@@ -224,7 +224,6 @@ def config():
     else: 
         print(colored("Error while parsing the configuration file.\nThe maximum depth level is one, thus you can't create a subfolder inside of a subfolder.","red"))
 
-config()
+# config()
 
-# sub_sub
-# 1º mudar para o dir repetido
+# Falta implementar a config() no setup.py (open()) e no git.py 
