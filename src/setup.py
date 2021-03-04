@@ -26,7 +26,7 @@ class colors:
     UNDERLINE = '\033[4m'
 
 def setup(): # Setup function 
-
+    
     # Info message
     print("\nLooks like this is your first time using Nerv-Launch.")
     print("In order to continue, please, complete the setup. Keep in mind that this is only required one time.\n")
@@ -97,7 +97,9 @@ def setup(): # Setup function
             else: 
                 
                 # Saving the token at .bashrc if there isn't a GIT_TOKEN variable.
-                os.system(f"echo 'export GIT_TOKEN='{token}'' >> ~/.bashrc")
+                # os.system(f"echo 'export GIT_TOKEN='{token}'' >> ~/.bashrc")
+                store_var = f'''echo 'export GIT_TOKEN='{token}'' >> ~/.bashrc'''
+                subprocess.run(store_var, shell = True , stdout = subprocess.DEVNULL)
                 print(colored("\nThe token has been saved as an environmental variable.","yellow"))
                 print(colored("To change the token run the command [nerv --token].\n","yellow"))
                 print(colored("Restart your terminal.\n","red"))
@@ -137,3 +139,4 @@ def setup(): # Setup function
             json.dump(config,f)
         
         print(colored("\nSetup finished.\n","green"))
+

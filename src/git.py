@@ -14,6 +14,36 @@ creation of all the folders, subfolders and README/License,
 adding, commiting and pushing.
 """
 
+def get_token():
+    
+    init()
+    os.chdir(os.path.expanduser("~"))
+
+    try:
+        
+        # Getting the variable out of the system
+        with open(".bashrc","r+") as f: # Open .bashrc as read and write.
+            new_f = f.readlines()
+            f.seek(0) # Set pointer position to 0.
+            for line in new_f:
+                if "export GIT_TOKEN" not in line: # If it's not the key phrase then rewrites the same phrase on itself.
+                    f.write(line)
+                else:
+                    token_line = line  
+                    
+        # Formatting the line 
+        token_line = token_line.split("=")
+        x = []
+        for part in token_line: 
+            x.append(part.strip())
+        
+        token = x[1]
+        
+    except Exception as error:
+        print(colored(f"Something went wrong.\n{error}","red"))
+    
+    return token
+
 def git(name,lic,path):
     
     # Startup of the coloroma package.
@@ -22,12 +52,13 @@ def git(name,lic,path):
     # Opens the config.json file to read the github username.
     with open("config.json","r") as file:
         config = json.load(file)
-        git_user = config["github_user"]
+        git_user = config["github_name"]
         
     print("\n Creating new repository...")
     
-    # Gets the token saved as env variable on the setup on nerv.py .
-    GIT = os.environ.get("GIT_TOKEN")
+    # Gets the token from .bashrc using the get_token() function above.
+    GIT = get_token() 
+    print(GIT)
     API_URL = "https://api.github.com" # API base url, useless when in this format.
 
     """

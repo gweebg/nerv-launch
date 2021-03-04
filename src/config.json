@@ -1,29 +1,26 @@
 {
-    "profile_name": "Guilherme", 
-    "default_editor": "vscode", 
-    "github_name": "gweebg", 
-    "setup": "False",
-
-    "default_folders": false,
+    "profile_name": "Guilherme",
+    "default_editor": "vscode",
+    "github_name": "gweebg",
+    "setup": "True",
+    "default_folders": true,
     "add_readme": true,
     "custom_files": "",
-    "folders" : 
-    [
+    "folders": [
         {
             "folder_name": "docs",
             "files": "  "
         },
         {
             "folder_name": "src",
-            "files": "script.py,init.py" 
+            "files": "script.py,init.py"
         },
         {
             "folder_name": "lib",
             "files": "__init__.py"
         }
     ],
-    "subfolders": 
-    [
+    "subfolders": [
         {
             "sub_name": "html",
             "inside": "docs",
@@ -33,9 +30,6 @@
             "sub_name": "package",
             "inside": "src",
             "content": "script.sh,script.py"
-            
         }
     ]
-
 }
-
