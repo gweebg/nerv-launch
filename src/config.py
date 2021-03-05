@@ -84,7 +84,7 @@ def checkConfig(path):
             print(colored("Error while parsing config.json\nDuplicate file name on the same folder.","red"))
             sys.exit()
         else:
-            print("passed")
+            # print("passed")
             pass
 
     # Checking if the folder where the subfolder is exists.
@@ -156,10 +156,12 @@ def createFolder(file,path): # path where the project is
         config = json.load(f)
 
     data = config["folders"] # List
-    print(type(data))
+    # print(type(data))
     # print(data)
-    print("="*50)
+    # print("="*50)
 
+    print("  ʟ Adding primary folders..")
+    
     # Folder creation
     for folder in data:
         name = folder["folder_name"]
@@ -174,16 +176,20 @@ def createFolder(file,path): # path where the project is
 
             for file in files:
                 os.system(f"touch {file}")
-                print(f"{file} created in {path}")
+                # print(f"{file} created in {path}")
         else:
             os.chdir(path)
             os.mkdir(name)
+    
+    print("    ʟ Successful\n ")
 
 def createSub(file,path):
 
     global current_dir
     with open(file,"r") as file:
         config = json.load(file)
+
+    print("  ʟ Adding secondary folders..")
 
     # Subfolder creation
     sub_data = config["subfolders"]
@@ -199,7 +205,7 @@ def createSub(file,path):
                 if len(files.strip()) != 0:
 
                     files = files.split(",")
-                    print(files)
+                    # print(files)
 
                     os.chdir(f"{path}/{inside}")
                     os.mkdir(sub_name)
@@ -214,6 +220,13 @@ def createSub(file,path):
             else:
                 print(colored(f"Error on config.json\nThe folder {inside} does not exist within {path}.","red"))
                 sys.exit()
+    
+    print("    ʟ Successful\n ")
+    
+    print("  ʟ Adding files..")
+    print("    ʟ Successful\n ")
+    
+
 
 def config(path):
     
@@ -222,8 +235,8 @@ def config(path):
     else: 
         print(colored("Error while parsing the configuration file.\nThe maximum depth level is one, thus you can't create a subfolder inside of a subfolder.","red"))
 
-# path = "proj/testes"
-# config(path)
+path = "proj/testes"
+config(path)
 
 # Para implementar no git.py : 
 # import config
