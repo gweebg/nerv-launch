@@ -226,8 +226,6 @@ def createSub(file,path):
     print("  ʟ Adding files..")
     print("    ʟ Successful\n ")
     
-
-
 def config(path):
     
     if checkConfig(current_dir): 
@@ -235,9 +233,3 @@ def config(path):
     else: 
         print(colored("Error while parsing the configuration file.\nThe maximum depth level is one, thus you can't create a subfolder inside of a subfolder.","red"))
 
-path = "proj/testes"
-config(path)
-
-# Para implementar no git.py : 
-# import config
-# config(path)

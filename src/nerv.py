@@ -240,12 +240,12 @@ if __name__ == "__main__":
     Things like not creating a repository or running the code on quiet mode
     are handled here. 
     """
-
+    
+    os.chdir(directory) # Added for the same reason as the open_repo()
+    
     with open("config.json","r") as f:
         config = json.load(f)
         key = config["setup"]
-    
-    os.chdir(directory) # Added for the same reason as the open_repo()
 
      # Checking if the setup() has already been made by looking for the "setup" value on config.json .
     if key == "True": 

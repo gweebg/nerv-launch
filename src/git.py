@@ -7,6 +7,8 @@ import requests
 from colorama import init
 from termcolor import colored
 
+import folder
+
 """
 This module is responsible for the
 creation of the repository, cloning, 
@@ -53,7 +55,9 @@ def git(name,lic,path):
     with open("config.json","r") as file:
         config = json.load(file)
         git_user = config["github_name"]
-        
+    
+    print(colored("\n [ Project {name} ]","cyan"))
+    
     print("\n Creating new repository...")
     
     # Gets the token from .bashrc using the get_token() function above.
@@ -107,26 +111,8 @@ def git(name,lic,path):
         input("Press Enter To Exit...")
         sys.exit()
 
-    # Adding folders and README.md
-    print("  ʟ Adding files..")
-    os.mkdir(f"{name}/src") # src
-    os.system(f'touch {name}/src/README.md') # README
-    os.system(f"echo '# Source code' >> {name}/src/README.md") # README update
-
-    # Creates documentation folder and adds a README to it.
-    os.mkdir(f"{name}/docs") # docs
-    os.system(f'touch {name}/docs/README.md') 
-    os.system(f"echo '# Documentation' >> {name}/docs/README.md") 
-
-    # Creates lib folder and adds a README to it.
-    os.mkdir(f"{name}/lib") # lib
-    os.system(f'touch {name}/lib/README.md') 
-    os.system(f"echo '# Libs' >> {name}/lib/README.md") 
-
-    # Creates README to the frontpage of the repository.
-    os.system(f'touch {name}/README.md') 
-    os.system(f"echo '# {name}' >> {name}/README.md") # Writes the project name to the README.md file.
-    print("    ʟ Successful\n ")
+    # Using folder.py to create folders from config.json 
+    folder.config(f"{path}/{name}")
 
     # Pushing to the repository
     print("  ʟ Pushing to remote..")
