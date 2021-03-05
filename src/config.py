@@ -5,16 +5,15 @@ import os
 
 from colorama import init
 from termcolor import colored
+import getpass
 
 """
 Config file example:
-
 {
     "profile_name": "Guilherme",
     "default_editor": "vscode",
     "github_name": "gweebg",
     "setup": "False",
-
     "default_folders": false,
     "add_readme": true,
     "folders" :
@@ -36,16 +35,13 @@ Config file example:
             "content": "index.html"
         }
     ]
-
 }
-
 project
     | docs
         | html
             | index.html
     | src
         | script.py
-
 First parse the "folder" key and create the folders,
 then add its content and finally parse the "subfolder" key
 and add the folders and files.
@@ -133,12 +129,14 @@ def checkConfig(path):
 
     return True
 
-def readConfig(path):
+def readConfig(path,proj):
     # Path where to work
     config_path = path
     os.chdir(config_path)
+    
     global current_dir
-
+    user = getpass.getuser() 
+    
     with open("config.json","r") as file:
         config = json.load(file)
 
@@ -147,9 +145,9 @@ def readConfig(path):
         if config["default_folders"] :
             return True # para depois comparar caso esteja tudo setado para default
         else :
-            createFolder("config.json","/home/gwee/proj/testes")
+            createFolder("config.json",f"/home/{user}/{proj}")
             os.chdir(current_dir)
-            createSub("config.json","/home/gwee/proj/testes")
+            createSub("config.json",f"/home/{user}/{proj}")
 
                  # Acabar, dar parse para adiciconar folder dentro de folder.
 def createFolder(file,path): # path where the project is
@@ -217,13 +215,16 @@ def createSub(file,path):
                 print(colored(f"Error on config.json\nThe folder {inside} does not exist within {path}.","red"))
                 sys.exit()
 
-def config():
+def config(path):
     
     if checkConfig(current_dir): 
-        readConfig(os.getcwd())
+        readConfig(os.getcwd(),path)
     else: 
         print(colored("Error while parsing the configuration file.\nThe maximum depth level is one, thus you can't create a subfolder inside of a subfolder.","red"))
 
-# config()
+# path = "proj/testes"
+# config(path)
 
-# Falta implementar a config() no setup.py (open()) e no git.py 
+# Para implementar no git.py : 
+# import config
+# config(path)

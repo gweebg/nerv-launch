@@ -58,7 +58,6 @@ def git(name,lic,path):
     
     # Gets the token from .bashrc using the get_token() function above.
     GIT = get_token() 
-    print(GIT)
     API_URL = "https://api.github.com" # API base url, useless when in this format.
 
     """
@@ -146,3 +145,6 @@ def git(name,lic,path):
         print(colored(f"An exception has occured while pushing to remote :\n{ex}"))
         input("Press Enter To Exit...")
         sys.exit()
+        
+# Falta adicionar config.py para a criação dos folders: 
+# Primeiro criar, depois adicionar, e dar push 

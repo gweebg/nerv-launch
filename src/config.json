@@ -3,7 +3,7 @@
     "default_editor": "vscode",
     "github_name": "gweebg",
     "setup": "True",
-    "default_folders": true,
+    "default_folders": false,
     "add_readme": true,
     "custom_files": "",
     "folders": [
