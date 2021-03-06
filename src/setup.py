@@ -6,6 +6,7 @@ import json
 import requests
 from colorama import init
 from termcolor import colored
+import getpass
 
 """
 This module is responsible for the 
@@ -61,7 +62,7 @@ def setup(): # Setup function
             
             # Taking the Github username as well as the OAuth token.
             username = input(f"  {colors.WARNING}(*){colors.ENDC} Please enter your Github username : ")
-            token = input(f"  {colors.WARNING}(*){colors.ENDC} Please provide your authentication token for your Github account : ")
+            token = getpass.getpass(f"  {colors.WARNING}(*){colors.ENDC} Please provide your authentication token for your Github account : ")
             
             """
             The setup() function will only execute if the value 'setup' on  
