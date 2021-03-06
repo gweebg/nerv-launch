@@ -12,6 +12,7 @@ from termcolor import colored
 
 import git
 import setup
+import folder
 
 """
 Project launcher for unix systems written in Python3 and some shell script.
@@ -206,32 +207,17 @@ def files_only():
     and essential files to the project generation, such as 
     README.md and /src/, /docs/, /lib/ folders.
     """
+    
+    print("\n Starting up your project :\n")
+    
     os.chdir(os.path.expanduser("~")) # Changing to root directory.
     # Changes the directory to the project's. 
     os.chdir(os.getcwd() if args.path == "." else args.path)   
     os.mkdir(args.name) 
 
-    # Adding folders and README.md
-    print("\n Adding files...")
-    os.mkdir(f"{args.name}/src") # Creates the folder src into the project folder.
-    os.system(f'touch {args.name}/src/README.md') # Adds the README file to it.
-    os.system(f"echo '# Source code' >> {args.name}/src/README.md") # Writes the folder name to the README file.
-
-    # Creates documentation folder and adds a README to it.
-    os.mkdir(f"{args.name}/docs") # docs
-    os.system(f'touch {args.name}/docs/README.md') 
-    os.system(f"echo '# Documentation' >> {args.name}/docs/README.md") 
-
-    # Creates lib folder and adds a README to it.
-    os.mkdir(f"{args.name}/lib") # lib
-    os.system(f'touch {args.name}/lib/README.md') 
-    os.system(f"echo '# Libs' >> {args.name}/lib/README.md") 
-
-    # Creates README to the frontpage of the repository.
-    os.system(f'touch {args.name}/README.md') 
-    os.system(f"echo '# {args.name}' >> {args.name}/README.md") 
-    print("  ʟ Successful\n")
-
+    # Create custom folders from config.json
+    folder.config(f"{args.path}/{args.name}")
+    
 # Runs every function according to the arguments given.
 if __name__ == "__main__":
 

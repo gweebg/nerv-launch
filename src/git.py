@@ -89,7 +89,7 @@ def git(name,lic,path):
     else:
         print(f"  ʟ Repository created : https://github.com/{git_user}/{name} ")
     
-    print(colored("\n Starting up your project :\n"))
+    print("\n Starting up your project :\n")
 
     """
     Cloning the repository created above,

@@ -42,6 +42,7 @@ project
             | index.html
     | src
         | script.py
+        
 First parse the "folder" key and create the folders,
 then add its content and finally parse the "subfolder" key
 and add the folders and files.
@@ -143,11 +144,35 @@ def readConfig(path,proj):
     if config["add_readme"] :
 
         if config["default_folders"] :
-            return True # para depois comparar caso esteja tudo setado para default
+            defaultFolder(proj, f"/home/{user}/{proj}")
         else :
             createFolder("config.json",f"/home/{user}/{proj}")
             os.chdir(current_dir)
             createSub("config.json",f"/home/{user}/{proj}")
+
+
+def defaultFolder(name,path):
+    
+    # Adding folders and README.md
+    print(" Adding files...")
+    os.mkdir(f"{path}/src") # Creates the folder src into the project folder.
+    os.system(f'touch {path}/src/README.md') # Adds the README file to it.
+    os.system(f"echo '# Source code' >> {path}/src/README.md") # Writes the folder name to the README file.
+
+    # Creates documentation folder and adds a README to it.
+    os.mkdir(f"{path}/docs") # docs
+    os.system(f'touch {path}/docs/README.md') 
+    os.system(f"echo '# Documentation' >> {path}/docs/README.md") 
+
+    # Creates lib folder and adds a README to it.
+    os.mkdir(f"{path}/lib") # lib
+    os.system(f'touch {path}/lib/README.md') 
+    os.system(f"echo '# Libs' >> {path}/lib/README.md") 
+
+    # Creates README to the frontpage of the repository.
+    os.system(f'touch {path}/README.md') 
+    os.system(f"echo '# {name}' >> {path}/README.md") 
+    print("  ʟ Successful\n")
 
                  # Acabar, dar parse para adiciconar folder dentro de folder.
 def createFolder(file,path): # path where the project is
@@ -233,3 +258,5 @@ def config(path):
     else: 
         print(colored("Error while parsing the configuration file.\nThe maximum depth level is one, thus you can't create a subfolder inside of a subfolder.","red"))
 
+
+# FIX aos . em vez de path
